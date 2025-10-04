@@ -1,15 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   images: {
     domains: ['ipfs.io', 'gateway.pinata.cloud'],
-    unoptimized: true, // Required for static export
   },
-  output: 'export', // Enable static export for IPFS deployment
-  trailingSlash: true, // Required for static hosting
-  skipTrailingSlashRedirect: true,
+  // Remove static export config for Vercel deployment
+  // output: 'export' is only needed for static hosting
+  // trailingSlash: true is not needed for Vercel
 }
 
 module.exports = nextConfig
