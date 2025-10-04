@@ -1,4 +1,9 @@
 {
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "5bbac7cf4e8aba606703698b3f3e54a1"
   }
