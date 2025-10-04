@@ -1,12 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "env": {
-    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "@walletconnect_project_id"
+    "NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID": "5bbac7cf4e8aba606703698b3f3e54a1"
   }
 }
