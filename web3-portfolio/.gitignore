@@ -33,7 +33,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# NOTE: next-env.d.ts should NOT be ignored as it's needed for Next.js detection
 
 # IDE
 .vscode/
