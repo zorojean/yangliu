@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount, useBalance, useReadContract, useWriteContract } from 'wagmi'
+import { useAccount, useBalance, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -60,38 +60,53 @@ const USDC_CONTRACT = {
 export function Web3Demo() {
   const { address, isConnected } = useAccount()
   const { data: balance } = useBalance({ address })
-  const { writeContract, isPending, error } = useWriteContract()
-  
-  // Read token info
-  const { data: tokenSymbol } = useReadContract({
-    ...USDC_CONTRACT,
-    functionName: 'symbol'
-  })
-  
-  const { data: tokenBalance } = useReadContract({
-    ...USDC_CONTRACT,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined
-  })
-  
   const [recipient, setRecipient] = useState('')
   const [amount, setAmount] = useState('')
   const [txHash, setTxHash] = useState<string | null>(null)
+
+  const { write: writeContract, data: writeData, isLoading: isPending, error } = useContractWrite({
+    address: USDC_CONTRACT.address,
+    abi: USDC_CONTRACT.abi,
+    functionName: 'transfer'
+  })
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransaction({
+    hash: writeData?.hash,
+  })
+  
+  // Read token info
+  const { data: tokenSymbol } = useContractRead({
+    address: USDC_CONTRACT.address,
+    abi: USDC_CONTRACT.abi,
+    functionName: 'symbol'
+  })
+  
+  const { data: tokenBalance } = useContractRead({
+    address: USDC_CONTRACT.address,
+    abi: USDC_CONTRACT.abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    enabled: !!address
+  })
 
   const handleTransfer = async () => {
     if (!address || !recipient || !amount) return
     
     try {
-      const hash = await writeContract({
-        ...USDC_CONTRACT,
-        functionName: 'transfer',
+      writeContract({
         args: [recipient as `0x${string}`, parseEther(amount)]
       })
-      setTxHash(hash)
     } catch (err) {
       console.error('Transfer failed:', err)
     }
   }
+
+  // Update txHash when transaction is submitted
+  useEffect(() => {
+    if (writeData?.hash) {
+      setTxHash(writeData.hash)
+    }
+  }, [writeData?.hash])
 
   const copyAddress = () => {
     if (address) {
@@ -156,18 +171,18 @@ export function Web3Demo() {
                       </div>
                     </div>
                     
-                    {tokenBalance && (
+                    {tokenBalance ? (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">
-                          {tokenSymbol || 'Token'} Balance
+                          {(tokenSymbol as string) || 'Token'} Balance
                         </label>
                         <div className="p-2 bg-muted rounded">
                           <span className="font-mono">
-                            {formatEther(tokenBalance)} {tokenSymbol || 'TOKENS'}
+                            {formatEther(tokenBalance as bigint)} {(tokenSymbol as string) || 'TOKENS'}
                           </span>
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </>
               ) : (
@@ -250,14 +265,19 @@ export function Web3Demo() {
                   
                   <Button
                     onClick={handleTransfer}
-                    disabled={!recipient || !amount || isPending}
+                    disabled={!recipient || !amount || isPending || isConfirming}
                     className="w-full"
                     variant="web3"
                   >
                     {isPending ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Processing...
+                        Submitting...
+                      </>
+                    ) : isConfirming ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Confirming...
                       </>
                     ) : (
                       <>
